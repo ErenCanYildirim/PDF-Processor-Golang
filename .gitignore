@@ -2,6 +2,16 @@
 scripts/
 logs/
 
+/Makefile
+Makefile 
+\Makefile 
+Makefile/
+.Makefile
+
+output/
+temp/
+tests/
+
 /remove_pywin_req.bat
 
 # Python

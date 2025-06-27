@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: pdf-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pdf-api:
+    build: .
+    container_name: pdf-api
+    ports:
+      - "8080:8080"
+    environment:
+      - MODE=api
+      - PORT=8080
+      - REDIS_URL=redis://redis:6379
+      - WORKER_COUNT=5
+      - STORAGE_PATH=/app/output
+    volumes:
+      - ./output:/app/output
+      - ./temp:/app/temp
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  pdf-worker-1:
+    build: .
+    container_name: pdf-worker-1
+    environment:
+      - MODE=worker
+      - REDIS_URL=redis://redis:6379
+      - WORKER_COUNT=10
+      - STORAGE_PATH=/app/output
+    volumes:
+      - ./output:/app/output
+      - ./temp:/app/temp
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pdf-worker-2:
+    build: .
+    container_name: pdf-worker-2
+    environment:
+      - MODE=worker
+      - REDIS_URL=redis://redis:6379
+      - WORKER_COUNT=10
+      - STORAGE_PATH=/app/output
+    volumes:
+      - ./output:/app/output
+      - ./temp:/app/temp
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Worker Pool 3 (for high load)
+  pdf-worker-3:
+    build: .
+    container_name: pdf-worker-3
+    environment:
+      - MODE=worker
+      - REDIS_URL=redis://redis:6379
+      - WORKER_COUNT=10
+      - STORAGE_PATH=/app/output
+    volumes:
+      - ./output:/app/output
+      - ./temp:/app/temp
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - high-load
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    profiles:
+      - monitoring
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: pdf-processor-network
