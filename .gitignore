@@ -1,0 +1,47 @@
+#Folder
+scripts/
+logs/
+
+/remove_pywin_req.bat
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# VSCode
+.vscode/
+
+# Logs and runtime files
+*.log
+*.pid
+*.db
+*.sqlite3
+
+# mypy / pytest / coverage
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Pydantic cache
+.pydantic/
+
+# dotenv files
+.env
+.env.*
+
+# Compiled C extensions
+*.so
